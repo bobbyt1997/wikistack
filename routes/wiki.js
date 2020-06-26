@@ -9,20 +9,15 @@ router.get("/", async (req, res, next) => {
 });
 
 router.post("/", async (req, res, next) => {
-  const page = new Page({
-    title: req.body.title,
-    content: req.body.content,
-    status: req.body.status,
-  });
-
-  const user = new User({
-    name: req.body.name,
-    email: req.body.email,
-  });
-
   try {
-    await page.save();
-    await user.save();
+    const user = await User.findOrCreate({
+      where: { name: req.body.authorName, email: req.body.email },
+    });
+
+    const page = Page.create(req.body);
+
+    await page.setAuthor(user);
+
     res.redirect(`/wiki/${page.slug}`);
   } catch (error) {
     console.log(error);
@@ -36,12 +31,10 @@ router.get("/add", (req, res, next) => {
 
 router.get("/:slug", async (req, res, next) => {
   try {
-    res.send(
-      await views.wikiPage(
-        Page.findOne({ where: { slug: req.params.slug } }),
-        {}
-      )
-    );
+    const page = await Page.findOne({ where: { slug: req.params.slug } });
+    const author = await User.findOne({ where: { id: page.authorId } });
+    console.log(page);
+    res.send(views.wikiPage(page, author));
   } catch (error) {
     console.log(error);
     next(error);
