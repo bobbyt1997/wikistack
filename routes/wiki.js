@@ -3,8 +3,9 @@ const router = express.Router();
 const { Page, User } = require("../models");
 const views = require("../views");
 
-router.get("/", (req, res, next) => {
-  res.send("All wiki pages");
+router.get("/", async (req, res, next) => {
+  const pages = await Page.findAll();
+  res.send(views.main(pages));
 });
 
 router.post("/", async (req, res, next) => {
