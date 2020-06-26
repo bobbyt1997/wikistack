@@ -15,8 +15,14 @@ router.post("/", async (req, res, next) => {
     status: req.body.status,
   });
 
+  const user = new User({
+    name: req.body.name,
+    email: req.body.email,
+  });
+
   try {
     await page.save();
+    await user.save();
     res.redirect(`/wiki/${page.slug}`);
   } catch (error) {
     console.log(error);
