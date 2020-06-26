@@ -14,10 +14,9 @@ router.post("/", async (req, res, next) => {
       where: { name: req.body.authorName, email: req.body.email },
     });
 
-    const page = Page.create(req.body);
+    const page = await Page.create(req.body);
 
-    await page.setAuthor(user);
-
+    await page.setAuthor(user[0]);
     res.redirect(`/wiki/${page.slug}`);
   } catch (error) {
     console.log(error);
@@ -31,10 +30,16 @@ router.get("/add", (req, res, next) => {
 
 router.get("/:slug", async (req, res, next) => {
   try {
-    const page = await Page.findOne({ where: { slug: req.params.slug } });
-    const author = await User.findOne({ where: { id: page.authorId } });
-    console.log(page);
-    res.send(views.wikiPage(page, author));
+    const page = await Page.findOne({
+      where: { slug: req.params.slug },
+    });
+
+    if (page === null) {
+      res.sendStatus(404);
+    } else {
+      const author = await page.getAuthor();
+      res.send(views.wikiPage(page, author));
+    }
   } catch (error) {
     console.log(error);
     next(error);
